@@ -20,6 +20,15 @@
  * Author: Mark Lobodzinski <mark@lunarg.com>
  * Author: Rene Lindsay <rene@lunarg.com>
  */
+
+#ifdef __GNUC__
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+#else
+#define strndup(p, n) strdup(p)
+#endif
+
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -47,6 +56,7 @@
 #ifdef _WIN32
 
 #define snprintf _snprintf
+#define strdup   _strdup
 
 // Returns nonzero if the console is used only for this process. Will return
 // zero if another process (such as cmd.exe) is also attached.
@@ -1317,10 +1327,10 @@ static void AppGpuDumpQueueProps(const struct AppGpu *gpu, uint32_t id) {
  * The prefixes used here are not SI prefixes, but rather the binary prefixes
  * based on powers of 1024 (kibi-, mebi-, gibi- etc.).
  */
+#define BUFSIZE 32
 static char *HumanReadable(const size_t sz) {
-    const size_t bufsize = 32;
     const char prefixes[] = "KMGTPEZY";
-    char buf[bufsize];
+    char buf[BUFSIZE];
     int which = -1;
     double result = (double)sz;
     while (result > 1024 && which < 7) {
@@ -1332,8 +1342,8 @@ static char *HumanReadable(const size_t sz) {
     if (which >= 0) {
         unit[0] = prefixes[which];
     }
-    snprintf(buf, bufsize, "%.2f %sB", result, unit);
-    return strndup(buf, bufsize);
+    snprintf(buf, BUFSIZE, "%.2f %sB", result, unit);
+    return strndup(buf, BUFSIZE);
 }
 
 static void AppGpuDumpMemoryProps(const struct AppGpu *gpu) {

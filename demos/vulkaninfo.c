@@ -1373,7 +1373,7 @@ static void AppGpuDumpMemoryProps(const struct AppGpu *gpu) {
     for (uint32_t i = 0; i < props->memoryHeapCount; i++) {
         printf("\tmemoryHeaps[%u] : \n", i);
         const VkDeviceSize memSize = props->memoryHeaps[i].size;
-        char *memSizeHumanReadable = HumanReadable(memSize);
+        char *memSizeHumanReadable = HumanReadable((const size_t)memSize);
         printf("\t\tsize          = " PRINTF_SIZE_T_SPECIFIER " (0x%" PRIxLEAST64 ") (%s)\n", (size_t)memSize, memSize,
                memSizeHumanReadable);
         free(memSizeHumanReadable);

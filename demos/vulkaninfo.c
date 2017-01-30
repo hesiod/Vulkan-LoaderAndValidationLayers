@@ -1312,6 +1312,30 @@ static void AppGpuDumpQueueProps(const struct AppGpu *gpu, uint32_t id) {
     fflush(stdout);
 }
 
+/* This prints a number of bytes in a human-readable format according to prefixes
+ * of the International System of Quantities (ISQ), defined in ISO/IEC 80000.
+ * The prefixes used here are not SI prefixes, but rather the binary prefixes
+ * based on powers of 1024 (kibi-, mebi-, gibi- etc.).
+ */
+static char *HumanReadable(const size_t sz) {
+    const size_t bufsize = 32;
+    const char prefixes[] = "KMGTPEZY";
+    char buf[bufsize];
+    int which = -1;
+    double result = (double)sz;
+    while (result > 1024 && which < 7) {
+        result /= 1024;
+        ++which;
+    }
+
+    char unit[] = "\0i";
+    if (which >= 0) {
+        unit[0] = prefixes[which];
+    }
+    snprintf(buf, bufsize, "%.2f %sB", result, unit);
+    return strndup(buf, bufsize);
+}
+
 static void AppGpuDumpMemoryProps(const struct AppGpu *gpu) {
     const VkPhysicalDeviceMemoryProperties *props = &gpu->memory_props;
 
@@ -1339,7 +1363,10 @@ static void AppGpuDumpMemoryProps(const struct AppGpu *gpu) {
     for (uint32_t i = 0; i < props->memoryHeapCount; i++) {
         printf("\tmemoryHeaps[%u] : \n", i);
         const VkDeviceSize memSize = props->memoryHeaps[i].size;
-        printf("\t\tsize          = " PRINTF_SIZE_T_SPECIFIER " (0x%" PRIxLEAST64 ")\n", (size_t)memSize, memSize);
+        char *memSizeHumanReadable = HumanReadable(memSize);
+        printf("\t\tsize          = " PRINTF_SIZE_T_SPECIFIER " (0x%" PRIxLEAST64 ") (%s)\n", (size_t)memSize, memSize,
+               memSizeHumanReadable);
+        free(memSizeHumanReadable);
 
         VkMemoryHeapFlags heap_flags = props->memoryHeaps[i].flags;
         printf("\t\tflags: \n\t\t\t");
